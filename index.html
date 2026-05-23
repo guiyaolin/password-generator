@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>随机密码生成器</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eef2f7;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #657084;
+      --line: #d9e0eb;
+      --primary: #156f8f;
+      --primary-dark: #0f5a76;
+      --accent: #f0a43a;
+      --danger: #b42318;
+      --shadow: 0 24px 70px rgba(18, 31, 52, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 28px 16px;
+      color: var(--text);
+      font-family: "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      background: linear-gradient(135deg, #eef2f7 0%, #d9e5ef 48%, #f6f8fb 100%);
+    }
+
+    main {
+      width: min(100%, 520px);
+    }
+
+    .generator {
+      width: 100%;
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.2;
+      font-weight: 750;
+      letter-spacing: 0;
+    }
+
+    .badge {
+      flex: 0 0 auto;
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: #6d3d00;
+      background: #fff0d6;
+      border: 1px solid #ffdca4;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .password-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .password-output {
+      min-width: 0;
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      padding: 13px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: #0f172a;
+      background: #f8fafc;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 18px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+      user-select: all;
+    }
+
+    .password-output.error {
+      color: var(--danger);
+      font-family: inherit;
+      font-size: 15px;
+      user-select: none;
+    }
+
+    button {
+      min-height: 56px;
+      border: 0;
+      border-radius: 8px;
+      padding: 0 18px;
+      color: #ffffff;
+      background: var(--primary);
+      font: inherit;
+      font-weight: 750;
+      cursor: pointer;
+      transition: transform 140ms ease, background 140ms ease, opacity 140ms ease;
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .controls {
+      display: grid;
+      gap: 16px;
+    }
+
+    .length-control {
+      display: grid;
+      grid-template-columns: 1fr 112px;
+      align-items: center;
+      gap: 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    label,
+    legend {
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: var(--text);
+      background: #f8fafc;
+      font: inherit;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    input[type="number"]:focus,
+    input[type="checkbox"]:focus-visible,
+    button:focus-visible {
+      outline: 3px solid rgba(21, 111, 143, 0.22);
+      outline-offset: 2px;
+    }
+
+    fieldset {
+      margin: 0;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    legend {
+      padding: 0 6px;
+    }
+
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 46px;
+      padding: 10px 12px;
+      border: 1px solid #e4e9f1;
+      border-radius: 8px;
+      background: #f8fafc;
+      color: var(--text);
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    input[type="checkbox"] {
+      width: 19px;
+      height: 19px;
+      margin: 0;
+      accent-color: var(--primary);
+    }
+
+    .status {
+      min-height: 20px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status.success {
+      color: var(--primary-dark);
+      font-weight: 700;
+    }
+
+    .status.warning {
+      color: #946200;
+      font-weight: 700;
+    }
+
+    @media (max-width: 520px) {
+      .generator {
+        padding: 22px;
+      }
+
+      .header,
+      .password-row,
+      .length-control {
+        grid-template-columns: 1fr;
+      }
+
+      .header {
+        display: grid;
+      }
+
+      .badge {
+        width: fit-content;
+      }
+
+      .option-grid {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="generator" aria-labelledby="page-title">
+      <div class="header">
+        <h1 id="page-title">随机密码生成器</h1>
+        <span class="badge" id="lengthBadge">16 位</span>
+      </div>
+
+      <div class="password-row">
+        <div class="password-output" id="passwordOutput" aria-live="polite"></div>
+        <button type="button" id="copyButton">复制</button>
+      </div>
+
+      <div class="controls">
+        <div class="length-control">
+          <label for="passwordLength">密码长度</label>
+          <input id="passwordLength" type="number" min="1" max="128" value="16" inputmode="numeric">
+        </div>
+
+        <fieldset>
+          <legend>字符要求</legend>
+          <div class="option-grid">
+            <label class="option">
+              <input type="checkbox" id="includeUppercase" checked>
+              必须有大写字母
+            </label>
+            <label class="option">
+              <input type="checkbox" id="includeLowercase" checked>
+              必须有小写字母
+            </label>
+            <label class="option">
+              <input type="checkbox" id="includeNumbers" checked>
+              必须有数字
+            </label>
+            <label class="option">
+              <input type="checkbox" id="includeSymbols" checked>
+              必须有特殊字符
+            </label>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="status" id="statusMessage" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <script>
+    const characterSets = [
+      {
+        id: "includeUppercase",
+        chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      },
+      {
+        id: "includeLowercase",
+        chars: "abcdefghijklmnopqrstuvwxyz"
+      },
+      {
+        id: "includeNumbers",
+        chars: "0123456789"
+      },
+      {
+        id: "includeSymbols",
+        chars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+      }
+    ];
+
+    const passwordOutput = document.getElementById("passwordOutput");
+    const copyButton = document.getElementById("copyButton");
+    const passwordLength = document.getElementById("passwordLength");
+    const statusMessage = document.getElementById("statusMessage");
+    const lengthBadge = document.getElementById("lengthBadge");
+
+    function randomIndex(max) {
+      const values = new Uint32Array(1);
+      crypto.getRandomValues(values);
+      return values[0] % max;
+    }
+
+    function randomChar(chars) {
+      return chars[randomIndex(chars.length)];
+    }
+
+    function shuffle(chars) {
+      for (let index = chars.length - 1; index > 0; index -= 1) {
+        const swapIndex = randomIndex(index + 1);
+        [chars[index], chars[swapIndex]] = [chars[swapIndex], chars[index]];
+      }
+
+      return chars;
+    }
+
+    function getSelectedSets() {
+      return characterSets.filter((set) => document.getElementById(set.id).checked);
+    }
+
+    function normalizeLength(minimumLength) {
+      const requestedLength = Number.parseInt(passwordLength.value, 10);
+      const safeLength = Number.isFinite(requestedLength) ? requestedLength : 16;
+      return Math.min(Math.max(safeLength, minimumLength, 1), 128);
+    }
+
+    function setStatus(message, type = "") {
+      statusMessage.textContent = message;
+      statusMessage.className = type ? `status ${type}` : "status";
+    }
+
+    function generatePassword() {
+      const selectedSets = getSelectedSets();
+
+      if (selectedSets.length === 0) {
+        passwordOutput.textContent = "请至少选择一种字符要求";
+        passwordOutput.classList.add("error");
+        copyButton.disabled = true;
+        lengthBadge.textContent = "无法生成";
+        setStatus("", "");
+        return;
+      }
+
+      const length = normalizeLength(selectedSets.length);
+      const allChars = selectedSets.map((set) => set.chars).join("");
+      const chars = selectedSets.map((set) => randomChar(set.chars));
+
+      while (chars.length < length) {
+        chars.push(randomChar(allChars));
+      }
+
+      const password = shuffle(chars).join("");
+      passwordOutput.textContent = password;
+      passwordOutput.classList.remove("error");
+      copyButton.disabled = false;
+      lengthBadge.textContent = `${password.length} 位`;
+
+      if (length !== Number.parseInt(passwordLength.value, 10)) {
+        setStatus(`长度已按当前字符要求调整为 ${length} 位`, "warning");
+      } else {
+        setStatus("", "");
+      }
+    }
+
+    async function copyPassword() {
+      const password = passwordOutput.textContent;
+
+      if (!password || copyButton.disabled) {
+        return;
+      }
+
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(password);
+        } else {
+          const textarea = document.createElement("textarea");
+          textarea.value = password;
+          textarea.setAttribute("readonly", "");
+          textarea.style.position = "fixed";
+          textarea.style.opacity = "0";
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          textarea.remove();
+        }
+
+        const originalText = copyButton.textContent;
+        copyButton.textContent = "已复制";
+        setStatus("密码已复制到剪贴板", "success");
+
+        window.setTimeout(() => {
+          copyButton.textContent = originalText;
+          setStatus("", "");
+        }, 1600);
+      } catch (error) {
+        setStatus("复制失败，请手动选择密码复制", "warning");
+      }
+    }
+
+    passwordLength.addEventListener("input", generatePassword);
+    copyButton.addEventListener("click", copyPassword);
+
+    characterSets.forEach((set) => {
+      document.getElementById(set.id).addEventListener("change", generatePassword);
+    });
+
+    generatePassword();
+  </script>
+</body>
+</html>
